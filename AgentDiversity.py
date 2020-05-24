@@ -1,15 +1,17 @@
 import random as rand
 import math
+import numpy as np
 
 
 class Agent:
 
     # constructor #######
-    def __init__(self, type, dap, initial_sig, sig_fid, sig_dim, initial_strategy, signal_costs=[0.0, 0.0]):
+    def __init__(self, type, dap, initial_sig, sig_fid, sig_dim, initial_strategy, typeSigCorr, tolerance, signal_costs=[0.0, 0.0]):
 
         # agent's type and agent's disagreement point (dap)
         self.type = type
         self.dap = dap
+        self.tol = tolerance
 
         # conditional strategy what to do when receive signal 1 or signal 2
         self.strategy = initial_strategy
@@ -29,6 +31,8 @@ class Agent:
 
         # an agent's probability to send signal A
         self.sig = initial_sig
+        self.typeSigCorr = typeSigCorr
+
         self.sig_dim = sig_dim
         self.sig_fid = sig_fid
 
@@ -38,8 +42,27 @@ class Agent:
     # play against an opponent
     def interact(self, opponent, game):
 
+        # flip the opponent's first bit with a prob of 1-typeSigCorr
+        if rand.random() > opponent.typeSigCorr:
+            if opponent.type == 0:
+                opponent.sig[0] = 1
+            else:
+                opponent.sig[0] = 0
+        else:
+            opponent.sig[0] = opponent.type
+
         # play conditional strategy based on the signal of the opponent
         self.choose(opponent.sig)
+
+        # same for the opponent
+        # flip the signal bit with a prob of 1-correlation with type
+        if rand.random() > self.typeSigCorr:
+            if self.type == 0:
+                self.sig[0] = 1
+            else:
+                self.sig[0] = 0
+        else:
+            self.sig[0] = self.type
 
         # opponent plays conditional strategy based on your signal
         opponent.choose(self.sig)
@@ -67,8 +90,23 @@ class Agent:
         # strong assumption about the number of dimensions being two
         # the first index into the strategy array (fixed trait)
         # determined by the opponent signal
+
+        # if the Euclidean distance between signals exceeds tolerance
+        if np.linalg.norm(self.sig - op_signal) > self.tol:
+            #print('other')
+
+            # treat the opponent as if they are not of your class
+            index0 = int(not self.type)
+
+        else:
+
+            #print('same')
+
+            # treat them as if they are like you
+            index0 = self.type
+
         # we simply use the index (0 or 1)
-        index0 = int(op_signal[0])
+        # index0 = int(op_signal[0])
 
         # the second index into the strategy array (plastic trait)
         index1 = int(math.floor(op_signal[1]) * self.sig_fid)

@@ -18,12 +18,20 @@ disagreement = 0.3
 sig_dim = 2
 # number of quantised values with which the strategy matrix tracks the signal
 sig_fid = 10
+# type signal correlation
+# this is the P(0|type=0) and P(1|type=1)
+typeSigCorr = 0.8
+
+# this implements tolerance
+# it is how far your opponent can be in
+# Euclidean space and you still treat them like you
+tolerance = 1.0
 
 # set the mutation rate
 mutation_rate = 0.0001
 
 # set the maximum runtime
-run_time = 100
+run_time = 10
 
 # set the number of experiments
 num_experiments = 1
@@ -61,7 +69,7 @@ for exp in range(num_experiments):
         sig[0] = 0
 
         # blue agent is agent type, disagreement point, signal, list of strategies
-        agents.append(Agent(0, disagreement, sig, sig_fid, sig_dim, strat))
+        agents.append(Agent(0, disagreement, sig, sig_fid, sig_dim, strat, typeSigCorr, tolerance))
 
     # now build all the red agents
     for dummy in range(size_Red):
@@ -72,11 +80,11 @@ for exp in range(num_experiments):
         # sig is a random vector in the unit cube of dimension sig_dim
         sig = np.random.rand(sig_dim)
 
-        # except the first dimension is fixed, Blue = 0 , Red=1
+        # except the first dimension is a prob of signalling to type
         sig[0] = 1
 
         # red agent is agent type, disagreement point (0), signal, list of strategies
-        agents.append(Agent(1, 0.0, sig, sig_fid, sig_dim, strat))
+        agents.append(Agent(1, 0.0, sig, sig_fid, sig_dim, strat, typeSigCorr, tolerance))
 
     # normalizer for accumulated utility
     # why 0.6?
@@ -131,7 +139,7 @@ for exp in range(num_experiments):
                 if prob < diff:
                     # copy the strategy and signal of the other agent
                     agent.strategy = op_agent.strategy
-                    agent.sig = op_agent.sig
+                    agent.sig[1:] = op_agent.sig[1:]
 
     results.append(experiment)
     print("Blue rewards", results[exp].rewardB)
