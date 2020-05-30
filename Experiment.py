@@ -18,6 +18,8 @@ class Experiment:
         self.redSigSeq = []
         self.blueStratSeq = []
         self.redStratSeq = []
+        self.blueTolSeq = []
+        self.redTolSeq = []
 
     # method for appending rewards and bids to experimental results
     def update(self, agent1, agent2, agents):
@@ -44,15 +46,19 @@ class Experiment:
 
         self.blueStratSeq.append([])
         self.redStratSeq.append([])
+        self.blueTolSeq.append([])
+        self.redTolSeq.append([])
 
         for agent in agents:
             if agent.type == 0:
                 blue_sig[CounterBlue, :] = agent.sig
                 self.blueStratSeq[-1].append(agent.strategy)
+                self.blueTolSeq[-1].append(agent.tol)
                 CounterBlue += 1
             else:
                 red_sig[CounterRed, :] = agent.sig
                 self.redStratSeq[-1].append(agent.strategy)
+                self.redTolSeq[-1].append(agent.tol)
                 CounterRed += 1
 
         self.blueSigSeq.append(blue_sig)

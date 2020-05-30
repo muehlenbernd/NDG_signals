@@ -6,12 +6,13 @@ import numpy as np
 class Agent:
 
     # constructor #######
-    def __init__(self, type, dap, initial_sig, sig_fid, sig_dim, initial_strategy, typeSigCorr, tolerance, signal_costs=[0.0, 0.0]):
+    def __init__(self, type, dap, initial_sig, sig_fid, sig_dim, initial_strategy, typeSigCorr, tolerance, plasticity, signal_costs=[0.0, 0.0]):
 
         # agent's type and agent's disagreement point (dap)
         self.type = type
         self.dap = dap
         self.tol = tolerance
+        self.plasticity = plasticity
 
         # conditional strategy what to do when receive signal 1 or signal 2
         self.strategy = initial_strategy
@@ -93,14 +94,14 @@ class Agent:
 
         # if the Euclidean distance between signals exceeds tolerance
         if np.linalg.norm(self.sig - op_signal) > self.tol:
-            #print('other')
+            # print('other')
 
             # treat the opponent as if they are not of your class
             index0 = int(not self.type)
 
         else:
 
-            #print('same')
+            # print('same')
 
             # treat them as if they are like you
             index0 = self.type
@@ -109,23 +110,30 @@ class Agent:
         # index0 = int(op_signal[0])
 
         # the second index into the strategy array (plastic trait)
-        index1 = int(math.floor(op_signal[1]) * self.sig_fid)
+        # index1 = int(math.floor(op_signal[1]) * self.sig_fid)
 
         # the choice is the strategy in that cell.
-        self.current_choice = self.strategy[index0, index1]
+        try:
+            self.current_choice = self.strategy[index0]
+            # print("strategy ", self.strategy)
+            # print("index0", index0)
+            # print("strategy with index ", self.strategy[index0])
+        except:
+            print("hello", index0)
+            print(op_signal)
+            print(self.strategy)
 
     # mutate the strategy of the agent
     def mutate(self):
 
+        # first mutate the strategy
         # pick a random int for dim0
         index0 = rand.randint(0, 1)
 
-        # pick a random int for dim1
-        index1 = rand.randint(0, self.sig_fid - 1)
-
         # randomise that cell in the strategy array
-        self.strategy[index0, index1] = rand.randint(0, 2)
+        self.strategy[index0] = rand.randint(0, 2)
 
+        # second mutate the signal
         # don't include the fixed trait
         # when selecting a random trait to mutate
         index_sig = rand.randint(1, self.sig_dim - 1)
@@ -134,3 +142,7 @@ class Agent:
         # keep the signal bounded between 0 and 1
         self.sig[index_sig] = min(1, max(0, self.sig[index_sig] + rand.uniform(-0.1, 0.1)))
 
+        # third mutate the tolerance
+        # keep the tolerance above 0
+        self.tol = max(0, self.tol + rand.uniform(-0.1, 0.1))
+        # print(self.tol)

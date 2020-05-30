@@ -1,37 +1,41 @@
-import numpy as np
 from AgentDiversity import *
 from Game import *
 from Experiment import *
 import random
+import numpy as np
 
-# import Ext_functions as ext
+np.set_printoptions(precision=3)
 
 # set the game by defining the L value
 NDG = Game(0.4)
 
 # set the disagreement point
-disagreement = 0.3
+disagreement = 0.4
 
 # signal dimension
 # first dimension is always fixed
 # other dimensions are between 0,1
 sig_dim = 2
 # number of quantised values with which the strategy matrix tracks the signal
-sig_fid = 10
+sig_fid = 1
 # type signal correlation
 # this is the P(0|type=0) and P(1|type=1)
-typeSigCorr = 0.8
+typeSigCorr = 1.0
+# plasticity for imitation of tolerance
+# this is like a learning rate and should be a number between 0 and 1
+plasticity = 0.2
 
 # this implements tolerance
 # it is how far your opponent can be in
-# Euclidean space and you still treat them like you
+# Euclidean space before you put in a diff class
+# note that there is no inherent preference (so perhaps tolerance is the wrong label)
 tolerance = 1.0
 
 # set the mutation rate
-mutation_rate = 0.0001
+mutation_rate = 0.05
 
 # set the maximum runtime
-run_time = 10
+run_time = 200
 
 # set the number of experiments
 num_experiments = 1
@@ -44,6 +48,18 @@ size_Red = 50
 
 # store the results here
 results = []
+round_size = (size_Blue + size_Red) * (size_Blue + size_Red - 1)
+
+
+def running_mean(x, n):
+    # pad with a zero at the start
+    # then calculate the cumulative summation
+    CumSum = np.cumsum(np.insert(x, 0, 0))
+    # two arrays that remove the first n and the last n elements
+    # now the array from the subtraction is the sum of the last n elements
+    # divide by n to get the windowed average for window n
+    return (CumSum[n:] - CumSum[:-n]) / n
+
 
 # start experiments
 for exp in range(num_experiments):
@@ -60,7 +76,7 @@ for exp in range(num_experiments):
     for dummy in range(size_Blue):
 
         # strat is the conditional strategy function
-        strat = np.random.randint(0, 3, (2, sig_fid))
+        strat = np.random.randint(0, 3, 2)
 
         # sig is a random vector in the unit cube of dimension sig_dim
         sig = np.random.rand(sig_dim)
@@ -69,13 +85,13 @@ for exp in range(num_experiments):
         sig[0] = 0
 
         # blue agent is agent type, disagreement point, signal, list of strategies
-        agents.append(Agent(0, disagreement, sig, sig_fid, sig_dim, strat, typeSigCorr, tolerance))
+        agents.append(Agent(0, disagreement, sig, sig_fid, sig_dim, strat, typeSigCorr, tolerance, plasticity))
 
     # now build all the red agents
     for dummy in range(size_Red):
 
         # strat is the conditional strategy function
-        strat = np.random.randint(0, 3, (2, sig_fid))
+        strat = np.random.randint(0, 3, 2)
 
         # sig is a random vector in the unit cube of dimension sig_dim
         sig = np.random.rand(sig_dim)
@@ -84,7 +100,7 @@ for exp in range(num_experiments):
         sig[0] = 1
 
         # red agent is agent type, disagreement point (0), signal, list of strategies
-        agents.append(Agent(1, 0.0, sig, sig_fid, sig_dim, strat, typeSigCorr, tolerance))
+        agents.append(Agent(1, 0.0, sig, sig_fid, sig_dim, strat, typeSigCorr, tolerance, plasticity))
 
     # normalizer for accumulated utility
     # why 0.6?
@@ -118,6 +134,15 @@ for exp in range(num_experiments):
                     # record the bids and rewards
                     experiment.update(agent1, agent2, agents)
 
+        # calculate and print the mean rewards for blue and red this round
+        start = (round_size * current_round+1) - 1
+        blueRSeq = np.array(experiment.rewardB[start:])
+        bRunMean = np.mean(blueRSeq)
+        print("blue mean reward", bRunMean)
+        redRSeq = np.array(experiment.rewardR[start:])
+        rRunMean = np.mean(redRSeq)
+        print("red mean reward", rRunMean)
+
         # imitation
         for index in range(len(agents)):
 
@@ -140,13 +165,20 @@ for exp in range(num_experiments):
                     # copy the strategy and signal of the other agent
                     agent.strategy = op_agent.strategy
                     agent.sig[1:] = op_agent.sig[1:]
+                    # move your tolerance level closer to the tolerance level of the other agent
+                    agent.tol = agent.tol + agent.plasticity * (op_agent.tol - agent.tol)
 
     results.append(experiment)
-    print("Blue rewards", results[exp].rewardB)
-    print("Red rewards", results[exp].rewardR)
 
+    print("Final simulation step, signal vectors for all blue agents")
     print(results[exp].blueSigSeq[-1])
+    print("Final simulation step, signal vectors for all red agents")
     print(results[exp].redSigSeq[-1])
 
-    print(results[exp].blueStratSeq[-1][-1])
+    print("Final simulation step, conditional strategy, all blue agents")
+    for agent in range(0, size_Blue - 1):
+        print("tolerance", results[exp].blueTolSeq[-1][agent], " t ", results[exp].blueStratSeq[-1][agent][0], ", not t ", results[exp].blueStratSeq[-1][agent][1])
 
+    print("Final simulation step, conditional strategy, all red agents")
+    for agent in range(0, size_Red - 1):
+        print("tolerance", results[exp].redTolSeq[-1][agent], "t ", results[exp].redStratSeq[-1][agent][0], ", not t ", results[exp].redStratSeq[-1][agent][1])
