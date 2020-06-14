@@ -1,5 +1,5 @@
 from Game import *
-from Agent import *
+from Agent_old import *
 import random
 #import Ext_functions as ext
 
@@ -48,7 +48,7 @@ for exp in range(num_experiments):
     print exp, "\t",
 
 
-    # create a popluation of agents with random strategies
+    # create a population of agents with random strategies
     agents = []
 
     for dummy in range(size_Blue):
@@ -66,6 +66,7 @@ for exp in range(num_experiments):
         s0 = random.randint(0, 2)
         s1 = random.randint(0, 2)
         prob_A = random.choice(signal_set)
+
         if fixed_type == 1 or fixed_type == 2:
             prob_A = 0.0
 

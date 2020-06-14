@@ -1,7 +1,9 @@
+# set up the payoff matrix for a Nash Demand Game
+
 class Game:
 
-    ####### constructor #######
-    def __init__(self, low = 0.4):
+    # constructor #######
+    def __init__(self, low=0.4):
 
         self.low = low
         self.medium = 0.5

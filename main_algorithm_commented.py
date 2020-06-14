@@ -8,11 +8,11 @@ import random
 NDG = Game(0.4)
 
 # set the disagreement point
-disagreement = 0.3
+disagreement = 0.4
 
 # set the fixed type who cannot change signal:
 # 0: only Blues are fixed, 1: only Reds are fixed, 2: both are fixed, 3: none are fixed
-fixed_type = 3
+fixed_type = 2
 
 # set the mutation rate
 mutation_rate = 0.0001
@@ -66,7 +66,7 @@ for exp in range(num_experiments):
 
         # if Blues have a fixed signal the blue signal is 1
         if fixed_type == 0 or fixed_type == 2:
-    
+            prob_A = 0.0
 
         # blue agent is agent type, disagreement point, signal, list of strategies
         agents.append(Agent(0, disagreement, prob_A, [s0, s1]))

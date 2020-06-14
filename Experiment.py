@@ -20,46 +20,67 @@ class Experiment:
         self.redStratSeq = []
         self.blueTolSeq = []
         self.redTolSeq = []
+        self.InteractArray = np.zeros([runtime, size_Blue + size_Red, size_Blue + size_Red])
+        self.normalizer = 0
 
     # method for appending rewards and bids to experimental results
-    def update(self, agent1, agent2, agents):
+    def update(self, agent1, agent2, agent1Index, agent2Index, current_round, num_rounds):
 
-        if agent1.type == 0:
-            self.rewardB.append(agent1.current_utility)
-            self.bidsB.append(agent1.current_choice)
-        else:
-            self.rewardR.append(agent1.current_utility)
-            self.bidsR.append(agent1.current_choice)
+        if current_round == num_rounds-1:
+            # print("agent ", agent1Index, " choice is ", agent1.current_choice)
+            # print("agent ", agent1Index, " choice is ", agent1.current_choice)
+            self.InteractArray[current_round, agent1Index, agent2Index] = agent1.current_choice
+            self.InteractArray[current_round, agent2Index, agent1Index] = agent2.current_choice
+
+        if agent1.type == 0:                                            # if agent1 is Blue
+            self.rewardB[-1].append(agent1.current_utility)                 # append reward to Blue rewards
+            self.bidsB[-1].append(int(agent1.current_choice))                    # append bids to list of blue bids
+        else:                                                           # if agent1 is Red
+            self.rewardR[-1].append(agent1.current_utility)                 # append reward to list of Red rewards
+            self.bidsR[-1].append(int(agent1.current_choice))                    # append bid to list of red bids
 
         if agent2.type == 0:
-            self.rewardB.append(agent2.current_utility)
-            self.bidsB.append(agent2.current_choice)
+            self.rewardB[-1].append(agent2.current_utility)
+            self.bidsB[-1].append(int(agent2.current_choice))
         else:
-            self.rewardR.append(agent2.current_utility)
-            self.bidsR.append(agent2.current_choice)
+            self.rewardR[-1].append(agent2.current_utility)
+            self.bidsR[-1].append(int(agent2.current_choice))
 
-        blue_sig = np.zeros(shape=(self.size_Blue, agent1.sig_dim))
-        red_sig = np.zeros(shape=(self.size_Blue, agent1.sig_dim))
+
+
+    def round_update(self, agents, setup):
+
+        blue_sig = np.zeros(shape=(self.size_Blue, setup.sig_dim))       # store blue signals
+        red_sig = np.zeros(shape=(self.size_Red, setup.sig_dim))         # store red signals
+
+        blue_strat = np.zeros([self.size_Blue, 2])                      # store blue strategies
+        red_strat = np.zeros([self.size_Red, 2])
+
+        blue_tol = np.zeros([self.size_Blue])                           # store blue tolerances
+        red_tol = np.zeros([self.size_Red])
 
         CounterBlue = 0
         CounterRed = 0
 
-        self.blueStratSeq.append([])
-        self.redStratSeq.append([])
-        self.blueTolSeq.append([])
-        self.redTolSeq.append([])
-
         for agent in agents:
             if agent.type == 0:
-                blue_sig[CounterBlue, :] = agent.sig
-                self.blueStratSeq[-1].append(agent.strategy)
-                self.blueTolSeq[-1].append(agent.tol)
+                blue_sig[CounterBlue, :] = agent.sig                    # record the signal
+                blue_strat[CounterBlue, :] = agent.strategy
+                # self.blueStratSeq[-1].append(agent.strategy)            # record the blue strategy
+                blue_tol[CounterBlue] = agent.tol
+                # self.blueTolSeq[-1].append(agent.tol)                   # record the blue tolerance
                 CounterBlue += 1
             else:
                 red_sig[CounterRed, :] = agent.sig
-                self.redStratSeq[-1].append(agent.strategy)
-                self.redTolSeq[-1].append(agent.tol)
+                # self.redStratSeq[-1].append(agent.strategy)
+                red_strat[CounterRed, :] = agent.strategy
+                # self.redTolSeq[-1].append(agent.tol)
+                red_tol[CounterRed] = agent.tol
                 CounterRed += 1
 
+        self.blueStratSeq.append(blue_strat.astype(int))
+        self.redStratSeq.append(red_strat.astype(int))
+        self.blueTolSeq.append(blue_tol)
+        self.redTolSeq.append(red_tol)
         self.blueSigSeq.append(blue_sig)
         self.redSigSeq.append(red_sig)

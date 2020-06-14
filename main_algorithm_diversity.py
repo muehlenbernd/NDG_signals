@@ -1,55 +1,3 @@
-from AgentDiversity import *
-from Game import *
-from Experiment import *
-import random
-import numpy as np
-
-np.set_printoptions(precision=3)
-
-# set the game by defining the L value
-NDG = Game(0.4)
-
-# set the disagreement point
-disagreement = 0.4
-
-# signal dimension
-# first dimension is always fixed
-# other dimensions are between 0,1
-sig_dim = 2
-# number of quantised values with which the strategy matrix tracks the signal
-sig_fid = 1
-# type signal correlation
-# this is the P(0|type=0) and P(1|type=1)
-typeSigCorr = 1.0
-# plasticity for imitation of tolerance
-# this is like a learning rate and should be a number between 0 and 1
-plasticity = 0.2
-
-# this implements tolerance
-# it is how far your opponent can be in
-# Euclidean space before you put in a diff class
-# note that there is no inherent preference (so perhaps tolerance is the wrong label)
-tolerance = 1.0
-
-# set the mutation rate
-mutation_rate = 0.05
-
-# set the maximum runtime
-run_time = 200
-
-# set the number of experiments
-num_experiments = 1
-
-print_round_results = True
-
-# set the population size
-size_Blue = 50
-size_Red = 50
-
-# store the results here
-results = []
-round_size = (size_Blue + size_Red) * (size_Blue + size_Red - 1)
-
 
 def running_mean(x, n):
     # pad with a zero at the start
@@ -59,7 +7,6 @@ def running_mean(x, n):
     # now the array from the subtraction is the sum of the last n elements
     # divide by n to get the windowed average for window n
     return (CumSum[n:] - CumSum[:-n]) / n
-
 
 # start experiments
 for exp in range(num_experiments):

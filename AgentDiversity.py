@@ -92,19 +92,25 @@ class Agent:
         # the first index into the strategy array (fixed trait)
         # determined by the opponent signal
 
+        # test code to check we can work with fixed traits alone
+        if self.type != op_signal[0]:
+            index0 = int(not self.type)
+        else:
+            index0 = self.type
+
         # if the Euclidean distance between signals exceeds tolerance
-        if np.linalg.norm(self.sig - op_signal) > self.tol:
+        # if np.linalg.norm(self.sig - op_signal) > self.tol:
             # print('other')
 
             # treat the opponent as if they are not of your class
-            index0 = int(not self.type)
+        #    index0 = int(not self.type)
 
-        else:
+        # else:
 
             # print('same')
 
             # treat them as if they are like you
-            index0 = self.type
+        #    index0 = self.type
 
         # we simply use the index (0 or 1)
         # index0 = int(op_signal[0])
